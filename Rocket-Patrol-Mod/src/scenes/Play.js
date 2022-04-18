@@ -12,7 +12,7 @@ class Play extends Phaser.Scene {
   }
   create() {
     // place tile sprite
-    this.starfield = this.add.tileSprite(0, 0, 640, 480, 'starfield').setOrigin(0, 0);
+    this.starfield = this.add.tileSprite(0, 0, 0, 0, 'starfield').setOrigin(0, 0);
 
     // green UI background
     this.add.rectangle(0, borderUISize + borderPadding, game.config.width, borderUISize * 2, 0x444644).setOrigin(0, 0);
@@ -66,24 +66,63 @@ class Play extends Phaser.Scene {
           top: 5,
           bottom: 5,
         },
-      fixedWidth: 100
+      fixedWidth: 200
     }
+
+this.gameClock = game.settings.gameTimer;
+
+
+//config for the clock
+    let timeConfig = {
+      fontFamily: 'Smooth Fantasy Font',
+      fontSize: '28px',
+      backgroundColor: '#00011',
+      color: '#843605',
+      align: 'center',
+        padding: {
+          top: 5,
+          bottom: 5,
+        },
+      fixedWidth: 100,
+      right: 0,
+      
+    }
+    this.gameClock = this.game.settings.gameTimer;//game time settings 60000
+
+    //add the time text to the screen
     this.scoreLeft = this.add.text(borderUISize + borderPadding, borderUISize + borderPadding*2, this.p1Score, scoreConfig);
-    
-    this.gameOver = false;
+    this.timeLeft = this.add.text(borderUISize+ borderPadding,  borderUISize + borderPadding*2 ,this.formatTime(this.gameClock), timeConfig);
+
+
+
+    this.timer = this.time.addEvent(
+            {
+                delay: 1000,
+                callback: () => {
+                    this.gameClock -= 1000; 
+                    this.timeLeft.text = this.formatTime(this.gameClock);
+                },
+                scope: this,
+                loop: true
+            }
+        );
 
     // 60-second play clock
     scoreConfig.fixedWidth = 0;
-    this.clock = this.time.delayedCall(60000, () => {
+    this.clock = this.time.delayedCall(game.settings.gameTimer, () => {
       this.add.text(game.config.width/2, game.config.height/2, 'GAME OVER', scoreConfig).setOrigin(0.5);
       this.add.text(game.config.width/2, game.config.height/2 + 64, 'Press (R) to Restart or ← for Menu', scoreConfig).setOrigin(0.5);
       this.gameOver = true;
     }, null, this);
+
+    this.gameOver = false;
+
   }
 
   update() {
     this.starfield.tilePositionX -= 4;
     if(!this.gameOver){
+      // this.clockLeft.text = clockLeft.toFixed(2);//toFixed() wont work
       this.p1Rocket.update();
       this.p2Rocket.update2();
       this.ship01.update();
@@ -162,4 +201,14 @@ if (this.checkCollision(this.p2Rocket, this.ship01)) {
     this.scoreLeft.text = this.p1Score;   
     this.sound.play('sfx_explosion');   
   }
+  //function to format the minutes and seconds countdown
+  formatTime(ms){
+    let sec = ms/1000;//divide the milliseconds by 1000
+    let min = Math.floor(sec/60);//calculate the minutes
+    let seconds = sec%60;//calculate the display seconds
+    seconds = seconds.toString().padStart(2, "0");//adding the extra 0 at the end
+    return `${min}:${seconds}`;//returning the calculated time left
 }
+
+}
+
